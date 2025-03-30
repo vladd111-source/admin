@@ -2,7 +2,6 @@ const supabaseUrl = 'https://hubrgeitdvodttderspj.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1YnJnZWl0ZHZvZHR0ZGVyc3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMxNzY0OTEsImV4cCI6MjA1ODc1MjQ5MX0.K44XhDzjOodHzgl_cx80taX8Vgg_thFAVEesZUvKNnA';
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-// 📊 Аналитика
 window.loadAnalytics = async function () {
   const filter = document.getElementById("filterUser").value.trim();
   const from = document.getElementById("dateFrom").value;
@@ -16,10 +15,17 @@ window.loadAnalytics = async function () {
 
   if (filter) query = query.eq("telegram_id", filter);
 
-  if (from) query = query.gte("created_at", `${from}T00:00:00.000Z`);
-  if (to)   query = query.lte("created_at", `${to}T23:59:59.999Z`);
+  if (from) {
+    const isoFrom = new Date(from + "T00:00:00.000Z").toISOString();
+    query = query.gte("created_at", isoFrom);
+  }
 
-  console.log("🔎 Запрос с фильтрами:", { filter, from, to });
+  if (to) {
+    const isoTo = new Date(to + "T23:59:59.999Z").toISOString();
+    query = query.lte("created_at", isoTo);
+  }
+
+  console.log("🔎 Фильтры:", { filter, from, to });
 
   const { data, error } = await query;
   const table = document.getElementById("analyticsTable");
@@ -48,12 +54,11 @@ window.loadAnalytics = async function () {
   });
 };
 
-// 📈 Статистика
 window.loadStats = async function () {
   const { data: events, error } = await supabase.from("analytics").select("event, telegram_id");
 
   if (error || !events) {
-    console.error("❌ Ошибка загрузки статистики:", error?.message);
+    console.error("❌ Ошибка статистики:", error?.message);
     return;
   }
 
@@ -71,7 +76,6 @@ window.loadStats = async function () {
   ).join('');
 };
 
-// ✅ Автоматическая загрузка после DOM
 document.addEventListener("DOMContentLoaded", () => {
   loadAnalytics();
   loadStats();
