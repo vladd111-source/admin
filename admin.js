@@ -18,16 +18,16 @@ window.loadAnalytics = async function () {
 
   // ✅ Приведение дат к ISO-формату
   if (from) {
-    const fromDate = new Date(from).toISOString().split("T")[0];
-    query = query.gte("created_at", fromDate);
+    const fromDate = new Date(from);
+    query = query.gte("created_at", fromDate.toISOString());
   }
 
   if (to) {
-    const toDate = new Date(to).toISOString().split("T")[0] + "T23:59:59";
-    query = query.lte("created_at", toDate);
+    const toDate = new Date(to);
+    toDate.setHours(23, 59, 59, 999);
+    query = query.lte("created_at", toDate.toISOString());
   }
 
-  // Логируем параметры фильтра
   console.log("🔎 Запрос с фильтрами:", { filter, from, to });
 
   const { data, error } = await query;
@@ -75,7 +75,9 @@ window.loadStats = async function () {
 
   document.getElementById("statUsers").textContent = users.size;
   document.getElementById("statEvents").textContent = total;
-  document.getElementById("topEvents").innerHTML = top.map(([name, count]) => `<li>${name} — ${count}</li>`).join('');
+  document.getElementById("topEvents").innerHTML = top.map(
+    ([name, count]) => `<li>${name} — ${count}</li>`
+  ).join('');
 };
 
 // ✅ Автоматическая загрузка после DOM
