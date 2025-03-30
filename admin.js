@@ -69,5 +69,6 @@ async function loadStats() {
   `;
 }
 
+// ✅ Вызов функций ПОСЛЕ их определения
 loadAnalytics();
 loadStats();
