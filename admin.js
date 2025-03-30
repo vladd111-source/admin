@@ -16,9 +16,8 @@ window.loadAnalytics = async function () {
 
   if (filter) query = query.eq("telegram_id", filter);
 
-  // ✅ Приведение к ISO-формату с UTC
-  if (from) query = query.gte("created_at", `${from}T00:00:00Z`);
-  if (to) query = query.lte("created_at", `${to}T23:59:59Z`);
+  if (from) query = query.gte("created_at", `${from}T00:00:00.000Z`);
+  if (to)   query = query.lte("created_at", `${to}T23:59:59.999Z`);
 
   console.log("🔎 Запрос с фильтрами:", { filter, from, to });
 
