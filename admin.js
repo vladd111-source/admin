@@ -2,6 +2,7 @@ const supabaseUrl = 'https://hubrgeitdvodttderspj.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1YnJnZWl0ZHZvZHR0ZGVyc3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMxNzY0OTEsImV4cCI6MjA1ODc1MjQ5MX0.K44XhDzjOodHzgl_cx80taX8Vgg_thFAVEesZUvKNnA';
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
+// 📊 Аналитика
 window.loadAnalytics = async function () {
   const filter = document.getElementById("filterUser").value.trim();
   const from = document.getElementById("dateFrom").value;
@@ -16,13 +17,14 @@ window.loadAnalytics = async function () {
   if (filter) query = query.eq("telegram_id", filter);
 
   if (from) {
-    const isoFrom = new Date(from + "T00:00:00.000Z").toISOString();
-    query = query.gte("created_at", isoFrom);
+    const fromUtc = new Date(from + "T00:00:00Z").toISOString();
+    query = query.gte("created_at", fromUtc);
   }
 
   if (to) {
-    const isoTo = new Date(to + "T23:59:59.999Z").toISOString();
-    query = query.lte("created_at", isoTo);
+    const toDate = new Date(to + "T23:59:59Z");
+    const toUtc = toDate.toISOString();
+    query = query.lte("created_at", toUtc);
   }
 
   console.log("🔎 Фильтры:", { filter, from, to });
@@ -54,6 +56,7 @@ window.loadAnalytics = async function () {
   });
 };
 
+// 📈 Статистика
 window.loadStats = async function () {
   const { data: events, error } = await supabase.from("analytics").select("event, telegram_id");
 
