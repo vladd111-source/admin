@@ -15,14 +15,27 @@ window.loadAnalytics = async function () {
     .limit(100);
 
   if (filter) query = query.eq("telegram_id", filter);
-  if (from) query = query.gte("created_at", from);
-  if (to) query = query.lte("created_at", to + 'T23:59:59');
+
+  // ✅ Приведение дат к ISO-формату
+  if (from) {
+    const fromDate = new Date(from).toISOString().split("T")[0];
+    query = query.gte("created_at", fromDate);
+  }
+
+  if (to) {
+    const toDate = new Date(to).toISOString().split("T")[0] + "T23:59:59";
+    query = query.lte("created_at", toDate);
+  }
+
+  // Логируем параметры фильтра
+  console.log("🔎 Запрос с фильтрами:", { filter, from, to });
 
   const { data, error } = await query;
   const table = document.getElementById("analyticsTable");
   table.innerHTML = "";
 
   if (error) {
+    console.error("❌ Ошибка запроса:", error.message);
     table.innerHTML = `<tr><td colspan="4" class="p-2 text-red-600">Ошибка: ${error.message}</td></tr>`;
     return;
   }
@@ -49,7 +62,7 @@ window.loadStats = async function () {
   const { data: events, error } = await supabase.from("analytics").select("event, telegram_id");
 
   if (error || !events) {
-    console.error("Ошибка загрузки статистики:", error?.message);
+    console.error("❌ Ошибка загрузки статистики:", error?.message);
     return;
   }
 
