@@ -2,7 +2,7 @@ const supabaseUrl = 'https://hubrgeitdvodttderspj.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1YnJnZWl0ZHZvZHR0ZGVyc3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMxNzY0OTEsImV4cCI6MjA1ODc1MjQ5MX0.K44XhDzjOodHzgl_cx80taX8Vgg_thFAVEesZUvKNnA';
 const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-// ✅ Аналитика по событиям
+// 📊 Аналитика
 async function loadAnalytics() {
   const filter = document.getElementById("filterUser").value.trim();
   const from = document.getElementById("dateFrom").value;
@@ -39,7 +39,7 @@ async function loadAnalytics() {
   });
 }
 
-// ✅ Загрузка статистики
+// 📈 Статистика
 async function loadStats() {
   const { data: events } = await supabase.from("analytics").select("event, telegram_id");
   if (!events) return;
@@ -56,10 +56,9 @@ async function loadStats() {
   document.getElementById("topEvents").innerHTML = top.map(([name, count]) => `<li>${name} — ${count}</li>`).join('');
 }
 
-// ✅ Глобальный экспорт
+// ✅ Сделать глобально доступным до загрузки
 window.loadAnalytics = loadAnalytics;
 
-// ✅ Автозагрузка при инициализации
 document.addEventListener("DOMContentLoaded", () => {
   loadAnalytics();
   loadStats();
