@@ -18,15 +18,17 @@ window.loadAnalytics = async function () {
     query = query.eq("telegram_id", filter);
   }
 
-  // Приводим даты к UTC ISO
+  // ⚠️ Локальное форматирование без Z
   if (from) {
-    const fromDate = new Date(from + "T00:00:00Z"); // Явно указываем Z (UTC)
-    query = query.gte("created_at", fromDate.toISOString());
+    const fromDate = new Date(from);
+    const fromFormatted = fromDate.toISOString().split('T')[0] + ' 00:00:00';
+    query = query.gte("created_at", fromFormatted);
   }
 
   if (to) {
-    const toDate = new Date(to + "T23:59:59Z"); // Явно указываем Z (UTC)
-    query = query.lte("created_at", toDate.toISOString());
+    const toDate = new Date(to);
+    const toFormatted = toDate.toISOString().split('T')[0] + ' 23:59:59';
+    query = query.lte("created_at", toFormatted);
   }
 
   console.log("🔎 Фильтры:", { filter, from, to });
@@ -57,7 +59,6 @@ window.loadAnalytics = async function () {
     table.appendChild(tr);
   });
 };
-
 // 📈 Статистика
 window.loadStats = async function () {
   const { data: events, error } = await supabase.from("analytics").select("event, telegram_id");
