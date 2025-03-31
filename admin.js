@@ -14,19 +14,9 @@ window.loadAnalytics = async function () {
     .order("created_at", { ascending: false })
     .limit(500);
 
-  if (filter) {
-    query = query.eq("telegram_id", filter);
-  }
-
-  if (from) {
-    const fromFormatted = new Date(from).toISOString().split('T')[0] + ' 00:00:00';
-    query = query.gte("created_at", fromFormatted);
-  }
-
-  if (to) {
-    const toFormatted = new Date(to).toISOString().split('T')[0] + ' 23:59:59';
-    query = query.lte("created_at", toFormatted);
-  }
+  if (filter) query = query.eq("telegram_id", filter);
+  if (from) query = query.gte("created_at", new Date(from).toISOString().split('T')[0] + ' 00:00:00');
+  if (to) query = query.lte("created_at", new Date(to).toISOString().split('T')[0] + ' 23:59:59');
 
   console.log("🔎 Фильтры:", { filter, from, to });
 
@@ -45,7 +35,7 @@ window.loadAnalytics = async function () {
     return;
   }
 
-  // 👥 Группировка по telegram_id
+  // 👥 Группировка по пользователям
   const grouped = {};
   data.forEach(row => {
     if (!grouped[row.telegram_id]) grouped[row.telegram_id] = [];
@@ -58,7 +48,7 @@ window.loadAnalytics = async function () {
 
     const header = document.createElement("div");
     header.className = "px-4 py-2 border-b font-semibold text-purple-700 flex items-center";
-    header.innerHTML = `<span class="mr-2 text-xl">🧑</span>Пользователь: ${userId}`;
+    header.innerHTML = `<span class="mr-2 text-xl">🧑</span> <span>Пользователь: ${userId}</span>`;
     block.appendChild(header);
 
     const innerTable = document.createElement("table");
@@ -75,12 +65,21 @@ window.loadAnalytics = async function () {
     `;
 
     const tbody = innerTable.querySelector("tbody");
+
     events.forEach(row => {
+      const eventStyle = row.event.toLowerCase().includes("ошибка")
+        ? 'text-red-600 font-medium'
+        : 'text-blue-600 font-medium';
+
+      const prettyData = Object.entries(row.event_data || {})
+        .map(([k, v]) => `<div><span class="font-semibold">${k}:</span> ${v}</div>`)
+        .join('');
+
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td class="border-t p-2">${row.event}</td>
-        <td class="border-t p-2 whitespace-pre-wrap text-xs">${JSON.stringify(row.event_data, null, 2)}</td>
-        <td class="border-t p-2">${new Date(row.created_at).toLocaleString("ru-RU")}</td>
+        <td class="border-t p-2 ${eventStyle}">${row.event}</td>
+        <td class="border-t p-2 whitespace-pre-wrap text-xs text-gray-800">${prettyData}</td>
+        <td class="border-t p-2 text-sm text-gray-700">${new Date(row.created_at).toLocaleString("ru-RU")}</td>
       `;
       tbody.appendChild(tr);
     });
