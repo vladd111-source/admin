@@ -18,17 +18,18 @@ window.loadAnalytics = async function () {
     query = query.eq("telegram_id", filter);
   }
 
+  // Приводим даты к UTC ISO
   if (from) {
-    const isoFrom = new Date(from + "T00:00:00").toISOString();
-    query = query.gte("created_at", isoFrom);
+    const fromDate = new Date(from + "T00:00:00Z"); // Явно указываем Z (UTC)
+    query = query.gte("created_at", fromDate.toISOString());
   }
 
   if (to) {
-    const toDate = new Date(to + "T23:59:59.999Z");
+    const toDate = new Date(to + "T23:59:59Z"); // Явно указываем Z (UTC)
     query = query.lte("created_at", toDate.toISOString());
   }
 
-  console.log("🔍 Фильтры:", { filter, from, to });
+  console.log("🔎 Фильтры:", { filter, from, to });
 
   const { data, error } = await query;
   const table = document.getElementById("analyticsTable");
