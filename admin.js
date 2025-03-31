@@ -3,11 +3,15 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 window.loadAnalytics = async function () {
+  console.log("📡 Отправляем запрос на Supabase...");
+
   const { data, error } = await supabase
     .from("analytics")
     .select("*")
     .order("created_at", { ascending: false })
     .limit(10);
+
+  console.log("📬 Ответ Supabase:", { data, error });
 
   const table = document.getElementById("analyticsTable");
   table.innerHTML = "";
@@ -19,6 +23,7 @@ window.loadAnalytics = async function () {
   }
 
   if (!data || data.length === 0) {
+    console.warn("⚠️ Данные не найдены");
     table.innerHTML = `<tr><td colspan="4" class="p-2 text-gray-500">Нет данных</td></tr>`;
     return;
   }
@@ -34,5 +39,5 @@ window.loadAnalytics = async function () {
     table.appendChild(tr);
   });
 
-  console.log("✅ Загружено записей:", data.length);
+  console.log(`✅ Загружено записей: ${data.length}`);
 };
