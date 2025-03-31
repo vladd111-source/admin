@@ -14,20 +14,21 @@ window.loadAnalytics = async function () {
     .order("created_at", { ascending: false })
     .limit(100);
 
-  if (filter) query = query.eq("telegram_id", filter);
+  if (filter) {
+    query = query.eq("telegram_id", filter);
+  }
 
   if (from) {
-    const fromUtc = new Date(from + "T00:00:00Z").toISOString();
-    query = query.gte("created_at", fromUtc);
+    const isoFrom = new Date(from + "T00:00:00").toISOString();
+    query = query.gte("created_at", isoFrom);
   }
 
   if (to) {
-    const toDate = new Date(to + "T23:59:59Z");
-    const toUtc = toDate.toISOString();
-    query = query.lte("created_at", toUtc);
+    const toDate = new Date(to + "T23:59:59.999Z");
+    query = query.lte("created_at", toDate.toISOString());
   }
 
-  console.log("🔎 Фильтры:", { filter, from, to });
+  console.log("🔍 Фильтры:", { filter, from, to });
 
   const { data, error } = await query;
   const table = document.getElementById("analyticsTable");
@@ -79,6 +80,7 @@ window.loadStats = async function () {
   ).join('');
 };
 
+// ✅ Автоматическая загрузка
 document.addEventListener("DOMContentLoaded", () => {
   loadAnalytics();
   loadStats();
