@@ -18,7 +18,6 @@ window.loadAnalytics = async function () {
     query = query.eq("telegram_id", filter);
   }
 
-  // ⚠️ Локальное форматирование без Z
   if (from) {
     const fromDate = new Date(from);
     const fromFormatted = fromDate.toISOString().split('T')[0] + ' 00:00:00';
@@ -48,12 +47,25 @@ window.loadAnalytics = async function () {
     return;
   }
 
+  const getEventStyle = (event) => {
+    if (event.includes("Ошибка")) return { color: "text-red-600", icon: "❌" };
+    if (event.includes("вкладк")) return { color: "text-blue-600", icon: "🔄" };
+    if (event.includes("язык")) return { color: "text-green-600", icon: "🌐" };
+    if (event.includes("Загрузка")) return { color: "text-yellow-600", icon: "🚀" };
+    return { color: "text-gray-800", icon: "ℹ️" };
+  };
+
   data.forEach(row => {
+    const { color, icon } = getEventStyle(row.event || "");
+    const readableData = Object.entries(row.event_data || {})
+      .map(([k, v]) => `<div><strong>${k}:</strong> ${v}</div>`)
+      .join('');
+
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td class="border-t p-2">${row.telegram_id}</td>
-      <td class="border-t p-2">${row.event}</td>
-      <td class="border-t p-2 whitespace-pre-wrap text-xs">${JSON.stringify(row.event_data, null, 2)}</td>
+      <td class="border-t p-2 ${color} font-medium">${icon} ${row.event}</td>
+      <td class="border-t p-2 text-sm leading-snug">${readableData}</td>
       <td class="border-t p-2">${new Date(row.created_at).toLocaleString("ru-RU")}</td>
     `;
     table.appendChild(tr);
@@ -83,7 +95,7 @@ window.loadStats = async function () {
   ).join('');
 };
 
-// ✅ Автоматическая загрузка
+// 🚀 Автоматическая загрузка при старте
 document.addEventListener("DOMContentLoaded", () => {
   loadAnalytics();
   loadStats();
