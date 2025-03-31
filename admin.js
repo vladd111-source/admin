@@ -2,7 +2,7 @@ const supabaseUrl = 'https://hubrgeitdvodttderspj.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1YnJnZWl0ZHZvZHR0ZGVyc3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMxNzY0OTEsImV4cCI6MjA1ODc1MjQ5MX0.K44XhDzjOodHzgl_cx80taX8Vgg_thFAVEesZUvKNnA';
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-// 📊 Аналитика (группировка по пользователям)
+// 📊 Аналитика
 window.loadAnalytics = async function () {
   const filter = document.getElementById("filterUser").value.trim();
   const from = document.getElementById("dateFrom").value;
@@ -35,63 +35,29 @@ window.loadAnalytics = async function () {
     return;
   }
 
-  // 👥 Группировка по пользователям
-  const grouped = {};
   data.forEach(row => {
-    if (!grouped[row.telegram_id]) grouped[row.telegram_id] = [];
-    grouped[row.telegram_id].push(row);
-  });
+    const eventStyle = row.event.toLowerCase().includes("ошибка")
+      ? 'text-red-600 font-medium'
+      : 'text-blue-600 font-medium';
 
-  Object.entries(grouped).forEach(([userId, events]) => {
-    const block = document.createElement("div");
-    block.className = "mb-6 bg-white shadow rounded";
+    const prettyData = Object.entries(row.event_data || {})
+      .filter(([k]) => k !== "timestamp")
+      .map(([k, v]) => `
+        <div class="mb-1">
+          <span class="inline-block w-24 font-medium text-gray-600">${k}:</span>
+          <span class="text-gray-900">${v}</span>
+        </div>
+      `)
+      .join('');
 
-    const header = document.createElement("div");
-    header.className = "px-4 py-2 border-b font-semibold text-purple-700 flex items-center";
-    header.innerHTML = `<span class="mr-2 text-xl">🧑</span> <span>Пользователь: ${userId}</span>`;
-    block.appendChild(header);
-
-    const innerTable = document.createElement("table");
-    innerTable.className = "min-w-full text-sm";
-    innerTable.innerHTML = `
-      <thead class="bg-gray-100 text-left">
-        <tr>
-          <th class="p-2">📌 Событие</th>
-          <th class="p-2">📄 Данные</th>
-          <th class="p-2">🕒 Время</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="border-t p-2 text-purple-700 font-semibold">${row.telegram_id}</td>
+      <td class="border-t p-2 ${eventStyle}">${row.event}</td>
+      <td class="border-t p-2 text-sm">${prettyData}</td>
+      <td class="border-t p-2 text-sm text-gray-700">${new Date(row.created_at).toLocaleString("ru-RU")}</td>
     `;
-
-    const tbody = innerTable.querySelector("tbody");
-
-    events.forEach(row => {
-      const eventStyle = row.event.toLowerCase().includes("ошибка")
-        ? 'text-red-600 font-medium'
-        : 'text-blue-600 font-medium';
-
-      const prettyData = Object.entries(row.event_data || {})
-        .filter(([k]) => k !== "timestamp")
-        .map(([k, v]) => `
-          <div class="mb-1">
-            <span class="inline-block w-24 font-medium text-gray-600">${k}:</span>
-            <span class="text-gray-900">${v}</span>
-          </div>
-        `)
-        .join('');
-
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td class="border-t p-2 ${eventStyle}">${row.event}</td>
-        <td class="border-t p-2 text-sm">${prettyData}</td>
-        <td class="border-t p-2 text-sm text-gray-700">${new Date(row.created_at).toLocaleString("ru-RU")}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-
-    block.appendChild(innerTable);
-    table.appendChild(block);
+    table.appendChild(tr);
   });
 };
 
