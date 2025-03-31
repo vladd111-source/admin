@@ -72,13 +72,19 @@ window.loadAnalytics = async function () {
         : 'text-blue-600 font-medium';
 
       const prettyData = Object.entries(row.event_data || {})
-        .map(([k, v]) => `<div><span class="font-semibold">${k}:</span> ${v}</div>`)
+        .filter(([k]) => k !== "timestamp")
+        .map(([k, v]) => `
+          <div class="mb-1">
+            <span class="inline-block w-24 font-medium text-gray-600">${k}:</span>
+            <span class="text-gray-900">${v}</span>
+          </div>
+        `)
         .join('');
 
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td class="border-t p-2 ${eventStyle}">${row.event}</td>
-        <td class="border-t p-2 whitespace-pre-wrap text-xs text-gray-800">${prettyData}</td>
+        <td class="border-t p-2 text-sm">${prettyData}</td>
         <td class="border-t p-2 text-sm text-gray-700">${new Date(row.created_at).toLocaleString("ru-RU")}</td>
       `;
       tbody.appendChild(tr);
