@@ -2,7 +2,7 @@ const supabaseUrl = 'https://hubrgeitdvodttderspj.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh1YnJnZWl0ZHZvZHR0ZGVyc3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMxNzY0OTEsImV4cCI6MjA1ODc1MjQ5MX0.K44XhDzjOodHzgl_cx80taX8Vgg_thFAVEesZUvKNnA';
 const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-// 📊 Аналитика
+// 📊 Аналитика (группировка по пользователям)
 window.loadAnalytics = async function () {
   const filter = document.getElementById("filterUser").value.trim();
   const from = document.getElementById("dateFrom").value;
@@ -12,21 +12,19 @@ window.loadAnalytics = async function () {
     .from("analytics")
     .select("*")
     .order("created_at", { ascending: false })
-    .limit(100);
+    .limit(500);
 
   if (filter) {
     query = query.eq("telegram_id", filter);
   }
 
   if (from) {
-    const fromDate = new Date(from);
-    const fromFormatted = fromDate.toISOString().split('T')[0] + ' 00:00:00';
+    const fromFormatted = new Date(from).toISOString().split('T')[0] + ' 00:00:00';
     query = query.gte("created_at", fromFormatted);
   }
 
   if (to) {
-    const toDate = new Date(to);
-    const toFormatted = toDate.toISOString().split('T')[0] + ' 23:59:59';
+    const toFormatted = new Date(to).toISOString().split('T')[0] + ' 23:59:59';
     query = query.lte("created_at", toFormatted);
   }
 
@@ -47,28 +45,48 @@ window.loadAnalytics = async function () {
     return;
   }
 
-  const getEventStyle = (event) => {
-    if (event.includes("Ошибка")) return { color: "text-red-600", icon: "❌" };
-    if (event.includes("вкладк")) return { color: "text-blue-600", icon: "🔄" };
-    if (event.includes("язык")) return { color: "text-green-600", icon: "🌐" };
-    if (event.includes("Загрузка")) return { color: "text-yellow-600", icon: "🚀" };
-    return { color: "text-gray-800", icon: "ℹ️" };
-  };
-
+  // 👥 Группировка по telegram_id
+  const grouped = {};
   data.forEach(row => {
-    const { color, icon } = getEventStyle(row.event || "");
-    const readableData = Object.entries(row.event_data || {})
-      .map(([k, v]) => `<div><strong>${k}:</strong> ${v}</div>`)
-      .join('');
+    if (!grouped[row.telegram_id]) grouped[row.telegram_id] = [];
+    grouped[row.telegram_id].push(row);
+  });
 
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td class="border-t p-2">${row.telegram_id}</td>
-      <td class="border-t p-2 ${color} font-medium">${icon} ${row.event}</td>
-      <td class="border-t p-2 text-sm leading-snug">${readableData}</td>
-      <td class="border-t p-2">${new Date(row.created_at).toLocaleString("ru-RU")}</td>
+  Object.entries(grouped).forEach(([userId, events]) => {
+    const block = document.createElement("div");
+    block.className = "mb-6 bg-white shadow rounded";
+
+    const header = document.createElement("div");
+    header.className = "px-4 py-2 border-b font-semibold text-purple-700 flex items-center";
+    header.innerHTML = `<span class="mr-2 text-xl">🧑</span>Пользователь: ${userId}`;
+    block.appendChild(header);
+
+    const innerTable = document.createElement("table");
+    innerTable.className = "min-w-full text-sm";
+    innerTable.innerHTML = `
+      <thead class="bg-gray-100 text-left">
+        <tr>
+          <th class="p-2">📌 Событие</th>
+          <th class="p-2">📄 Данные</th>
+          <th class="p-2">🕒 Время</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
     `;
-    table.appendChild(tr);
+
+    const tbody = innerTable.querySelector("tbody");
+    events.forEach(row => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td class="border-t p-2">${row.event}</td>
+        <td class="border-t p-2 whitespace-pre-wrap text-xs">${JSON.stringify(row.event_data, null, 2)}</td>
+        <td class="border-t p-2">${new Date(row.created_at).toLocaleString("ru-RU")}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    block.appendChild(innerTable);
+    table.appendChild(block);
   });
 };
 
@@ -95,7 +113,7 @@ window.loadStats = async function () {
   ).join('');
 };
 
-// 🚀 Автоматическая загрузка при старте
+// ✅ Автоматическая загрузка
 document.addEventListener("DOMContentLoaded", () => {
   loadAnalytics();
   loadStats();
