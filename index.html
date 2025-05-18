@@ -11,6 +11,15 @@
   <div class="max-w-6xl mx-auto">
     <h1 class="text-2xl font-bold mb-4">📊 Admin Panel – Go Travel</h1>
 
+    <!-- Источник данных -->
+    <div class="mb-6">
+      <label class="block text-sm font-medium">Источник данных</label>
+      <select id="dataSource" class="border px-3 py-1 rounded">
+        <option value="analytics">📌 События</option>
+        <option value="gpt_logs">🤖 GPT Запросы</option>
+      </select>
+    </div>
+
     <!-- Фильтры -->
     <div class="flex flex-wrap gap-4 items-end mb-6">
       <div>
